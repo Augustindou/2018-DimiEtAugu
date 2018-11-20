@@ -51,7 +51,7 @@ proc {TestIdentity P2T}
 end
 
 proc {TestDuration P2T}
-   skip
+   
 end
 
 proc {TestStretch P2T}
