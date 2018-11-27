@@ -38,7 +38,16 @@ end
 % TEST PartitionToTimedNotes
 
 proc {TestNotes P2T}
-   skip
+   TotalTests := @TotalTests + 1
+   local x in
+   x={NewCell 0}
+   if {NoteToExtended a}==note(name:a octave:4 sharp:false duration:1.0 instrument:none) then x:=x+1
+   if {NoteToExtended c3}==note(name:c octave:3 sharp:false duration:1.0 instrument:none) then x:=x+1
+   if {NoteToExtended g5}==note(name:g octave:5 sharp:false duration:1.0 instrument:none) then x:=x+1
+   if {NoteToExtended a#3}==note(name:a octave:3 sharp:false duration:1.0 instrument:none) then x:=x+1
+   if {NoteToExtended g#4}==note(name:g octave:4 sharp:false duration:1.0 instrument:none) then x:=x+1
+   
+   if @x==5 then PassedTests := @PassedTest + 1
 end
 
 proc {TestChords P2T}
@@ -51,7 +60,7 @@ proc {TestIdentity P2T}
 end
 
 proc {TestDuration P2T}
-   
+   skip
 end
 
 proc {TestStretch P2T}
