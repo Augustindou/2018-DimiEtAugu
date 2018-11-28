@@ -1,3 +1,4 @@
+
 local
    % See project statement for API details.
    [Project] = {Link ['Project2018.ozf']}
@@ -17,69 +18,71 @@ local
          [] [N O] then
             note(name:{StringToAtom [N]} octave:{StringToInt [O]} sharp:false duration:1.0 instrument: none)
          end
+      %[] H|T then {NoteToExtended H}|{NoteToExtended T} %%Dimi
       end
    end
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-   fun {ChordToExtended Chord}
-      0
-   end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Fonction qui transforme une note en "qqch"(duration:D height:H Instrument:I)
 
-   fun {NoteToSample Note D I}
-      case Note of silence then silence(duration:D)
-      else
-         local X Y in
-            X = {NoteToExtended Note}
-            case X.name#X.sharp
-            of a#false then Y=0
-            [] a#true then Y=1
-            [] b#false then Y=2
-            [] c#false then Y=~9
-            [] c#true then Y=~8
-            [] d#false then Y=~7
-            [] d#true then Y=~6
-            [] e#false then Y=~5
-            [] f#false then Y=~4
-            [] f#true then Y=~3
-            [] g#false then Y=~2
-            [] g#true then Y=~1
-            end
+%   fun {NoteToSample Note D I}
+%      case Note of silence then silence(Duration:D)
+%      else
+%         local X Y in
+%            X = {NoteToExtended Note}
+%            case X.name#X.sharp
+%            of a#false then Y=0
+%            [] a#true then Y=1
+%            [] b#false then Y=2
+%            [] c#false then Y=~9
+%            [] c#true then Y=~8
+%            [] d#false then Y=~7
+%            [] d#true then Y=~6
+%            [] e#false then Y=~5
+%            [] f#false then Y=~4
+%            [] f#true then Y=~3
+%            [] g#false then Y=~2
+%            [] g#true then Y=~1
+%            end
+%
+%            sample(duration:D height:(X.octave-4)*12+Y instrument:I)
+%         end
+%      end
+%   end
 
-            sample(duration:D height:(X.octave-4)*12+Y instrument:I)
-         end
-      end
-   end
-
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
    %Fonction Stretch
 
-   fun {Stretch F Sample}
-      case Sample
+   fun {Stretch F Note}
+      case Note
       of nil then nil
       [] H|T then {Stretch F H}|{Stretch F T}
-      [] sample(duration:D height:H instrument:I) then sample(duration:D*F height:H instrument:I)
+      [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I) then note(duration:D*F name:Name octave:Octave sharp:Boolean instrument:I)
       [] silence(duration:D) then silence(duration:D*F)
       end
    end
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
    %Fonction Duration
 
-   fun {Duration D Sample}
-      fun{TotalDuration Sample Acc}
-         case Sample
+   fun {Duration D Note}
+      fun{TotalDuration Note Acc}
+         case Note
          of nil then Acc
-         [] H|T then {TotalDuration T Acc+H.duration}
+         [] H|T then
+            if {List.is H} then
+               {TotalDuration T Acc+H.1.duration}
+            else
+               {TotalDuration T Acc+H.duration}
+            end
+         %{TotalDuration T Acc+H.duration} %% Dimi
          [] Z then Z.duration
          end
       end
-      DTot={TotalDuration Sample 0.0}
+      DTot={TotalDuration Note 0.0}
    in
-      {Stretch (D/DTot) Sample}
+      {Stretch (D/DTot) Note}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,18 +91,42 @@ local
    fun{Drone Note N}
       if N==0 then nil
       else
-         {NoteToSample Note 1.0 none}|{Drone Note N-1}
+         Note|{Drone Note N-1}
       end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Fonction Transpose
 
-   fun{Transpose Sample N}
-      case Sample
+   fun{Transpose N Note}
+      case Note
       of nil then nil
       [] H|T then {Transpose H N}|{Transpose T N}
-      [] sample(duration:D height:H instrument:I) then sample(duration:D height:H+N instrument:I)
+      [] note(name:Name octave:Octave sharp:Boolean duration:D instrument:I) then
+         local NoteToNoteUp NoteUpToNote Y Height in
+            fun{NoteToNoteUp Note}
+               case Note.name#Note.sharp
+               of a#false then Y=0
+               [] a#true then Y=1
+               [] b#false then Y=2
+               [] c#false then Y=~9
+               [] c#true then Y=~8
+               [] d#false then Y=~7
+               [] d#true then Y=~6
+               [] e#false then Y=~5
+               [] f#false then Y=~4
+               [] f#true then Y=~3
+               [] g#false then Y=~2
+               [] g#true then Y=~1
+               end
+               %noteUp(height:(Note.octave-4)*12+Y+N duration:Note.duration instrument:Note.instrument)
+               Height = (Note.octave-4)*12+Y+N
+            end
+
+            %%%%%% a continuer
+
+
+         end
       [] silence(duration:D) then silence(duration:D)
       end
    end
@@ -110,13 +137,18 @@ local
    fun {PartitionToTimedList Partition}
       case Partition
       of nil then nil
-      [] H|T then {Append {PartitionToTimedList H} {PartitionToTimedList T}}
-      [] drone(note:N P) then {Drone N {PartitionToTimedList P}}
+      [] H|T then
+         case H
+         of H1|T2 then {Append ({PartitionToTimedList H1}|{PartitionToTimedList T2}) {PartitionToTimedList T}}
+         [] Z then {Append {PartitionToTimedList H} {PartitionToTimedList T}}
+         end
+      [] drone(note:N P) then {Drone {PartitionToTimedList P} N}
       [] stretch(factor:F P) then {Stretch F {PartitionToTimedList P}}
       [] duration(seconds:S P) then {Duration S {PartitionToTimedList P}}
       [] transpose(semitones:S P) then {Transpose S {PartitionToTimedList P}}
-      [] silence(duration:D) then [silence(duree:D)]
-      [] Note then [{NoteToSample Note 1.0 none}]
+      [] silence(duration:D) then silence(duration:D) %%Dimi
+      [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I) then note(duration:D name:Name octave:Octave sharp:Boolean instrument:I) %%DIMI
+      [] Note then {NoteToExtended Note} %%Dimi %%Warning
       end
    end
 
@@ -129,7 +161,7 @@ local
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   Music = {Project.load 'C:/Users/augus/Documents/EPL/Q3/LFSAB1402-Informatique_2/DimiEtAugu/joy.dj.oz'}
+   Music = {Project.load 'joy.dj.oz'}
    Start
 
    % Uncomment next line to insert your tests.
@@ -152,3 +184,21 @@ in
    % Shows the total time to run your code.
    {Browse {IntToFloat {Time}-Start} / 1000.0}
 end
+
+
+% PROBLEMES !
+%
+% 1) Le stretch, bourdon renvoit des tableaux, donc des accords... Pas dingue
+%
+% 2) Le transpose se chie dessus
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
