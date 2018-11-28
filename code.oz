@@ -23,34 +23,6 @@ local
    end
 
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   %Fonction qui transforme une note en "qqch"(duration:D height:H Instrument:I)
-
-%   fun {NoteToSample Note D I}
-%      case Note of silence then silence(Duration:D) 
-%      else 
-%         local X Y in 
-%            X = {NoteToExtended Note}
-%            case X.name#X.sharp
-%            of a#false then Y=0
-%            [] a#true then Y=1
-%            [] b#false then Y=2
-%            [] c#false then Y=~9
-%            [] c#true then Y=~8
-%            [] d#false then Y=~7
-%            [] d#true then Y=~6
-%            [] e#false then Y=~5
-%            [] f#false then Y=~4
-%            [] f#true then Y=~3
-%            [] g#false then Y=~2
-%            [] g#true then Y=~1
-%            end
-%
-%            sample(duration:D height:(X.octave-4)*12+Y instrument:I)
-%         end
-%      end
-%   end
-
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
    %Fonction Stretch
 
@@ -142,7 +114,7 @@ local
       end
    end
    
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OKOKOKOK
    %Fonction qui interprete une partition et retourne une list de "qqch"
 
    fun {PartitionToTimedList Partition}
@@ -202,9 +174,9 @@ end
 %
 %1) Le stretch, bourdon renvoit des tableaux, donc des accords... Pas dingue                     V DONE
 %
-%2) Le transpose se chie dessus
+%2) Le transpose se chie dessus                                                                  V DONE
 %
-%3) Regler duration avec les tableaux 
+%3) Regler duration avec les tableaux                                                            V DONE
 %
 %
 %
