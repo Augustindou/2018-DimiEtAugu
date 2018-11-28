@@ -102,34 +102,70 @@ local
       case Note
       of nil then nil
       [] H|T then {Transpose H N}|{Transpose T N}
-      [] note(name:Name octave:Octave sharp:Boolean duration:D instrument:I) then
-         local NoteToNoteUp NoteUpToNote Y Height in
-            fun{NoteToNoteUp Note}
-               case Note.name#Note.sharp
-               of a#false then Y=0
-               [] a#true then Y=1
-               [] b#false then Y=2
-               [] c#false then Y=~9
-               [] c#true then Y=~8
-               [] d#false then Y=~7
-               [] d#true then Y=~6
-               [] e#false then Y=~5
-               [] f#false then Y=~4
-               [] f#true then Y=~3
-               [] g#false then Y=~2
-               [] g#true then Y=~1
-               end
-               %noteUp(height:(Note.octave-4)*12+Y+N duration:Note.duration instrument:Note.instrument)
-               Height = (Note.octave-4)*12+Y+N
-            end
-
-            %%%%%% a continuer
-
-
-         end
       [] silence(duration:D) then silence(duration:D)
+      [] note(name:Name octave:Octave sharp:Sharp duration:D instrument:I) then
+         local R S in
+            case Name#Sharp
+            of a#false then R = Octave*12
+            [] a#true then R = Octave*12 + 1
+            [] b#false then R = Octave*12 + 2
+            [] c#false then R = Octave*12 - 9
+            [] c#true then R = Octave*12 - 8
+            [] d#false then R = Octave*12 - 7
+            [] d#true then R = Octave*12 - 6
+            [] e#false then R = Octave*12 - 5
+            [] f#false then R = Octave*12 - 4
+            [] f#true then R = Octave*12 - 3
+            [] g#false then R = Octave*12 - 2
+            [] g#true then R = Octave*12 - 1
+            end
+            S = R + N
+            case (S mod 12)
+            of 0 then note(name:a octave:(S div 12) sharp:false duration:D instrument:I)
+            [] 1 then note(name:a octave:(S div 12) sharp:true duration:D instrument:I)
+            [] 2 then note(name:b octave:(S div 12) sharp:false duration:D instrument:I)
+            [] 3 then note(name:c octave:(S div 12)+1 sharp:false duration:D instrument:I)
+            [] 4 then note(name:c octave:(S div 12)+1 sharp:true duration:D instrument:I)
+            [] 5 then note(name:d octave:(S div 12)+1 sharp:false duration:D instrument:I)
+            [] 6 then note(name:d octave:(S div 12)+1 sharp:true duration:D instrument:I)
+            [] 7 then note(name:e octave:(S div 12)+1 sharp:false duration:D instrument:I)
+            [] 8 then note(name:f octave:(S div 12)+1 sharp:false duration:D instrument:I)
+            [] 9 then note(name:f octave:(S div 12)+1 sharp:true duration:D instrument:I)
+            [] 10 then note(name:g octave:(S div 12)+1 sharp:false duration:D instrument:I)
+            [] 11 then note(name:g octave:(S div 12)+1 sharp:true duration:D instrument:I)
+            end
+         end
       end
    end
+
+   %    [] note(name:Name octave:Octave sharp:Boolean duration:D instrument:I) then
+   %       local NoteToNoteUp NoteUpToNote Y Height in
+   %          fun{NoteToNoteUp Note}
+   %             case Note.name#Note.sharp
+   %             of a#false then Y=0
+   %             [] a#true then Y=1
+   %             [] b#false then Y=2
+   %             [] c#false then Y=~9
+   %             [] c#true then Y=~8
+   %             [] d#false then Y=~7
+   %             [] d#true then Y=~6
+   %             [] e#false then Y=~5
+   %             [] f#false then Y=~4
+   %             [] f#true then Y=~3
+   %             [] g#false then Y=~2
+   %             [] g#true then Y=~1
+   %             end
+   %             %noteUp(height:(Note.octave-4)*12+Y+N duration:Note.duration instrument:Note.instrument)
+   %             Height = (Note.octave-4)*12+Y+N
+   %          end
+
+   %          %%%%%% a continuer
+
+
+   %       end
+   %    [] silence(duration:D) then silence(duration:D)
+   %    end
+   % end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Fonction qui interprete une partition et retourne une list de "qqch"
