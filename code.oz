@@ -85,23 +85,27 @@ local
       {Stretch (D/DTot) Note}
    end
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
    %Fonction Drone
 
    fun{Drone Note N}
+      %{Browse Note}
       if N==0 then nil 
       else 
-         Note|{Drone Note N-1}
+	      case {Flatten Note} of [_] then {Flatten Note|{Drone Note N-1}}
+	      else Note|{Drone Note N-1}
+	      end
       end
    end
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
    %Fonction Transpose 
 
    fun{Transpose N Note}
+
       case Note
       of nil then nil
-      [] H|T then {Transpose H N}|{Transpose T N}
+      [] H|T then {Transpose N H}|{Transpose N T}
       [] silence(duration:D) then silence(duration:D)
       [] note(name:Name octave:Octave sharp:Sharp duration:D instrument:I) then
          local R S in
