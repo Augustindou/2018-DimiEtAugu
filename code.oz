@@ -140,7 +140,7 @@ local
 
    fun {Mix P2T Music}
       % TODO
-      {Project.readFile 'wave/animaux/cow.wav'}
+      {Project.readFile 'wave/animals/cow.wav'}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
