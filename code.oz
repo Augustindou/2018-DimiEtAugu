@@ -138,9 +138,73 @@ local
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+   fun{HeightOfNote Note}
+      local H S in
+	 case Note.name#Note.sharp
+         of a#false then S=0
+         [] a#true then S=1
+         [] b#false then S=2
+         [] c#false then S=~9
+         [] c#true then S=~8
+         [] d#false then S=~7
+         [] d#true then S=~6
+         [] e#false then S=~5
+         [] f#false then S=~4
+         [] f#true then S=~3
+         [] g#false then S=~2
+         [] g#true then S=~1
+	 end
+	 H = (Note.octave-4)*12+S
+	 H
+      end
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+   fun{ToVector Note}
+      Freq
+      H
+      Nmax
+      fun{List F I Nmax}
+         if I>=Nmax+1.0 then nil
+         else
+            0.5*{Sin 2.0*3.14*F*I/44100.0}|{List F I+1.0 Nmax}
+         end
+      end
+      fun{List2 N}%cas du silence
+         if N==0 then nil
+         else 0.0|{List2 N-1} 
+         end 
+      end
+   in
+      case Note
+      of note(name:Name octave:Octave sharp:Boolean duration:D instrument:I) then
+         H={IntToFloat {HeightOfNote Note}}
+         Freq={Pow 2.0 H/12.0}*440.0
+         Nmax=Note.duration*44100.0
+         {List Freq 1.0 Nmax}
+      [] silence(duree:D) then {List2 {FloatToInt D*44100.0}}
+      end
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %Dans le cas où c'est un
+   fun{ToListOfVector L}
+      case L of nil then nil
+      [] H|T then {Append {ToVector H} {ToListOfVector T}}
+      [] A then {ToVector A}
+      end
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
    fun {Mix P2T Music}
-      % TODO
-      {Project.readFile 'wave/animals/cow.wav'}
+      case Music
+      of nil then nil
+      [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
+      [] partition(P) then  {Mix PartitionToTimedList {PartitionToTimedList P}}
+      [] Z then {ToListOfVector Z}
+      end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
