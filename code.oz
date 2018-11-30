@@ -4,8 +4,10 @@ local
    [Project] = {Link ['Project2018.ozf']}
    Time = {Link ['x-oz://boot/Time']}.1.getReferenceTime
 
+
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   %
+   %%%      DEBUT DE LA PARTIE PARTITIONTOTIMEDLIST
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {NoteToExtended Note}
       case Note
@@ -27,33 +29,34 @@ local
    %Fonction Stretch
 
    fun {Stretch F Note}
-      case Note 
+      case Note
       of nil then nil
       [] H|T then {Stretch F H}|{Stretch F T}
-      [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I) then note(duration:D*F name:Name octave:Octave sharp:Boolean instrument:I)
+      [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)
+         then note(duration:D*F name:Name octave:Octave sharp:Boolean instrument:I)
       [] silence(duration:D) then silence(duration:D*F)
       end
-   end 
+   end
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK 
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
    %Fonction Duration
 
    fun {Duration D Note}
       fun{TotalDuration Note Acc}
-         case Note 
-         of nil then Acc 
-         [] H|T then 
-            if {List.is H} then 
+         case Note
+         of nil then Acc
+         [] H|T then
+            if {List.is H} then
                {TotalDuration T Acc+H.1.duration}
-            else 
-               {TotalDuration T Acc+H.duration}  
-            end    
+            else
+               {TotalDuration T Acc+H.duration}
+            end
          %{TotalDuration T Acc+H.duration} %% Dimi
-         [] Z then Z.duration 
-         end 
+         [] Z then Z.duration
+         end
       end
       DTot={TotalDuration Note 0.0}
-   in 
+   in
       {Stretch (D/DTot) Note}
    end
 
@@ -62,8 +65,8 @@ local
 
    fun{Drone Note N}
       %{Browse Note}
-      if N==0 then nil 
-      else 
+      if N==0 then nil
+      else
 	      case {Flatten Note} of [_] then {Flatten Note|{Drone Note N-1}}
 	      else Note|{Drone Note N-1}
 	      end
@@ -71,7 +74,7 @@ local
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
-   %Fonction Transpose 
+   %Fonction Transpose
 
    fun{Transpose N Note}
 
@@ -113,34 +116,37 @@ local
          end
       end
    end
-   
+
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OKOKOKOK
    %Fonction qui interprete une partition et retourne une list de "qqch"
 
    fun {PartitionToTimedList Partition}
-      case Partition 
+      case Partition
       of nil then nil
-      [] H|T then 
-         case H 
-         of H1|T2 then {Flatten ({PartitionToTimedList H1}|{PartitionToTimedList T2})}|{PartitionToTimedList T} 
+      [] H|T then
+         case H
+         of H1|T2 then {Flatten ({PartitionToTimedList H1}|{PartitionToTimedList T2})}|{PartitionToTimedList T}
                        %Flatten pour le problemes des accords (la premiere note etait une liste )
-         [] Z then {Append {PartitionToTimedList H} {PartitionToTimedList T}} 
+         [] Z then {Append {PartitionToTimedList H} {PartitionToTimedList T}}
          end
       [] drone(note:Note N) then {Drone {PartitionToTimedList Note} N}
-      [] stretch(factor:F P) then {Stretch F {PartitionToTimedList P}} 
+      [] stretch(factor:F P) then {Stretch F {PartitionToTimedList P}}
       [] duration(seconds:S P) then {Duration S {PartitionToTimedList P}}
       [] transpose(semitones:S P) then {Transpose S {PartitionToTimedList P}}
       [] silence(duration:D) then [silence(duration:D)] %%Dimi
-      [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I) then [note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)] %%DIMI
+      [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)
+         then [note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)] %%DIMI
       [] Note then [{NoteToExtended Note}] %%Dimi %%Warning
       end
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%      DEBUT DE LA PARTIE MIX
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{HeightOfNote Note}
       local H S in
-	 case Note.name#Note.sharp
+         case Note.name#Note.sharp
          of a#false then S=0
          [] a#true then S=1
          [] b#false then S=2
@@ -153,9 +159,9 @@ local
          [] f#true then S=~3
          [] g#false then S=~2
          [] g#true then S=~1
-	 end
-	 H = (Note.octave-4)*12+S
-	 H
+         end
+      H = (Note.octave-4)*12+S      % on peut juste mettre (Note.octave-4)*12+S aussi
+      H                             % au lieu de définir H et de le renvoyer
       end
    end
 
@@ -173,8 +179,8 @@ local
       end
       fun{List2 N}%cas du silence
          if N==0 then nil
-         else 0.0|{List2 N-1} 
-         end 
+         else 0.0|{List2 N-1}
+         end
       end
    in
       case Note
@@ -197,12 +203,36 @@ local
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Reverse ;) ça devrait marcher non?
+
+   fun {Reverse L}
+      {List.reverse L}
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Repeat ;)
+
+   fun {Repeat N L}
+      if N==0 then nil
+      else L|{Repeat N-1 L}
+      end
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {Mix P2T Music}
       case Music
       of nil then nil
       [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
       [] partition(P) then  {Mix PartitionToTimedList {PartitionToTimedList P}}
+
+      % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
+      %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
+      [] reverse(M) then {Mix PartitionToTimedList {Reverse {Mix PartitionToTimedList M}}}
+
+      % Même remarque pour {Mix PartitionToTimedList M} dans repeat
+      [] repeat(amount:N M) then {Mix PartitionToTimedList {Repeat N {Mix PartitionToTimedList M}}}
+
       [] Z then {ToListOfVector Z}
       end
    end
@@ -224,17 +254,17 @@ in
    % Add variables to this list to avoid "local variable used only once"
    % warnings.
    {ForAll [NoteToExtended Music] Wait}
-   
+
    % Calls your code, prints the result and outputs the result to out.wav.
    % You don't need to modify this.
    {Browse {Project.run Mix PartitionToTimedList Music 'out.wav'}}
-   
+
    % Shows the total time to run your code.
    {Browse {IntToFloat {Time}-Start} / 1000.0}
 end
 
 
-% PROBLEMES ! 
+% PROBLEMES !
 %
 %1) Le stretch, bourdon renvoit des tableaux, donc des accords... Pas dingue                     V DONE
 %
