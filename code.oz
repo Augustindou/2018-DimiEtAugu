@@ -204,6 +204,7 @@ local
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % Reverse ;) ça devrait marcher non?
+   % NON TESTE
 
    fun {Reverse L}
       {List.reverse L}
@@ -211,6 +212,7 @@ local
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % Repeat ;)
+   % NON TESTE
 
    fun {Repeat N L}
       if N==0 then nil
@@ -219,10 +221,37 @@ local
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Loop
+   % NON TESTE
+
+   fun {Loop D L}
+      local LTot N Crop ListLength A in
+         LTot = {FloatToInt D*44100.0}    % Longueur totale de la liste d'output
+         ListLength = {List.length L}     % Longueur de la musique
+         N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
+         Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
+
+         A = {NewCell nil}
+         for I in 1..Crop do
+               A := {List.nth L Crop+1-I}|@A
+         end
+         for I in 1..N do
+               A := {Append L @A}
+         end
+
+         @A
+      end
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {Mix P2T Music}
       case Music
       of nil then nil
+
+      % Est ce que si on a un accord en Head, ça ne va pas poser problème? J'ai pas vraiment réfléchi
+      % au truc mais je me demande... ça serait pas plus simple d'utiliser un 'chord(list:...)' que de
+      % faire des tableaux?
       [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
       [] partition(P) then  {Mix PartitionToTimedList {PartitionToTimedList P}}
 
@@ -232,6 +261,9 @@ local
 
       % Même remarque pour {Mix PartitionToTimedList M} dans repeat
       [] repeat(amount:N M) then {Mix PartitionToTimedList {Repeat N {Mix PartitionToTimedList M}}}
+
+      % Loop... ;)
+      [] loop(seconds:D M) then {Mix PartitionToTimedList {Loop D {Mix PartitionToTimedList M}}}
 
       [] Z then {ToListOfVector Z}
       end
