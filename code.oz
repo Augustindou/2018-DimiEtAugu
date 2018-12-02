@@ -271,7 +271,10 @@ local
       % faire des tableaux? Tu vas flatten tt le truc avec ton "append" je crois... Il faut checker comment
       % ça doit se passer avec des accords
       [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
-      [] partition(P) then  {Mix PartitionToTimedList {PartitionToTimedList P}}
+
+      % J'ai changé {PartitionToTimedList P} en {P2T P} pck dans l'énoncé ils disent de pas
+      % appeler PartitionToTimedList directement
+      [] partition(P) then  {Mix PartitionToTimedList {P2T P}}
 
       % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
       %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
@@ -327,9 +330,9 @@ end
 %
 % 4) Accords dans Mix à checker... Comment ça se passe ? Comment ça doit se passer ?
 %
+% 5) Checker tous mes commentaires dans fun {Mix P2T Music}
 %
-%
-%
+% 6) Faire des tests pour un peu tt
 %
 %
 %
