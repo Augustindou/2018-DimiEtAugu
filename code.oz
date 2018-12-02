@@ -177,7 +177,7 @@ local
             0.5*{Sin 2.0*3.14*F*I/44100.0}|{List F I+1.0 Nmax}
          end
       end
-      fun{List2 N}%cas du silence
+      fun{List2 N} % cas du silence
          if N==0 then nil
          else 0.0|{List2 N-1}
          end
@@ -244,6 +244,23 @@ local
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Clip
+   % NON TESTE
+
+   fun {Clip Low High L}
+      case L
+      of nil then nil
+      [] H|T then {Clip Low High H}|{Clip Low High T}
+      [] Sample then
+         if Sample>High then
+            High
+         elseif Sample<Low then
+            Low
+         else Sample
+         end
+   end
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {Mix P2T Music}
       case Music
@@ -251,7 +268,8 @@ local
 
       % Est ce que si on a un accord en Head, ça ne va pas poser problème? J'ai pas vraiment réfléchi
       % au truc mais je me demande... ça serait pas plus simple d'utiliser un 'chord(list:...)' que de
-      % faire des tableaux?
+      % faire des tableaux? Tu vas flatten tt le truc avec ton "append" je crois... Il faut checker comment
+      % ça doit se passer avec des accords
       [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
       [] partition(P) then  {Mix PartitionToTimedList {PartitionToTimedList P}}
 
@@ -265,7 +283,10 @@ local
       % Loop... ;)
       [] loop(seconds:D M) then {Mix PartitionToTimedList {Loop D {Mix PartitionToTimedList M}}}
 
-      [] Z then {ToListOfVector Z}
+      % Clip
+      [] clip(low:L high:H M) then {Mix PartitionToTimedList {Clip L H {Mix PartitionToTimedList M}}}
+
+      [] Z then {ToListOfVector Z} % faudrait juste mettre "ToVector"
       end
    end
 
@@ -298,13 +319,13 @@ end
 
 % PROBLEMES !
 %
-%1) Le stretch, bourdon renvoit des tableaux, donc des accords... Pas dingue                     V DONE
+% 1) Le stretch, bourdon renvoit des tableaux, donc des accords... Pas dingue                     V DONE
 %
-%2) Le transpose se chie dessus                                                                  V DONE
+% 2) Le transpose se chie dessus                                                                  V DONE
 %
-%3) Regler duration avec les tableaux                                                            V DONE
+% 3) Regler duration avec les tableaux                                                            V DONE
 %
-%
+% 4) Accords dans Mix à checker... Comment ça se passe ? Comment ça doit se passer ?
 %
 %
 %
