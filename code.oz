@@ -231,7 +231,7 @@ local
          N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
          Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
 
-         {Append {Repeat N L} {Cut 0 Crop L}} 
+         {Append {Repeat N L} {Cut 0 Crop L}}
       end
    end
 
@@ -244,12 +244,12 @@ local
       of nil then nil
       [] H|T then {Clip Low High H}|{Clip Low High T}
       [] Sample then
-	 if Sample>High then
-	    High
-	 elseif Sample<Low then
-	    Low
-	 else Sample
-	 end
+      if Sample>High then
+         High
+      elseif Sample<Low then
+         Low
+      else Sample
+      end
       end
    end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -257,7 +257,19 @@ local
    fun{Cut Start End L}
       nil
    end
-   
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Echo
+   % NON TESTE
+
+   fun {Echo Delay Decay L}
+      local ListOf0 in
+      fun {ListOf0 Lgth}
+         if Lgth==0 then nil
+         else 0|{ListOf0 Lgth-1}
+      end
+      {Merge [1.0#L Decay#{Append {ListOf0 Delay*44100} L}]}
+   end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -269,24 +281,24 @@ local
       % au truc mais je me demande... ça serait pas plus simple d'utiliser un 'chord(list:...)' que de
       % faire des tableaux? Tu vas flatten tt le truc avec ton "append" je crois... Il faut checker comment
       % ça doit se passer avec des accords
-      [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
+      [] H|T then {Append {Mix P2T H} {Mix P2T T}}
 
       % J'ai changé {PartitionToTimedList P} en {P2T P} pck dans l'énoncé ils disent de pas
       % appeler PartitionToTimedList directement
-      [] partition(P) then  {Mix PartitionToTimedList {P2T P}}
+      [] partition(P) then  {Mix P2T {P2T P}}
 
       % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
       %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
-      [] reverse(M) then {Reverse {Mix PartitionToTimedList M}}
+      [] reverse(M) then {Reverse {Mix P2T M}}
 
       % Même remarque pour {Mix PartitionToTimedList M} dans repeat
-      [] repeat(amount:N M) then {Repeat N {Mix PartitionToTimedList M}}
+      [] repeat(amount:N M) then {Repeat N {Mix P2T M}}
 
       % Loop... ;)
       %[] loop(seconds:D M) then {Loop D {Mix PartitionToTimedList M}}
 
       % Clip
-      [] clip(low:L high:H M) then {Clip L H {Mix PartitionToTimedList M}}
+      [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
 
       [] Z then {ToListOfSample Z} % faudrait juste mettre "ToSample"
       end
@@ -319,7 +331,7 @@ in
 end
 
 
-% PROBLEMES !
+% TO DO !
 %
 % 1) Le stretch, bourdon renvoit des tableaux, donc des accords... Pas dingue                     V DONE
 %
