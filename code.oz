@@ -165,22 +165,22 @@ local
       end
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
 
-   fun{ToVector Note}
+   fun{ToSample Note}
       Freq
       H
       Nmax
       fun{List F I Nmax}
-	 if I>=Nmax+1.0 then nil
-	 else
-	    0.5*{Sin 2.0*3.14*F*I/44100.0}|{List F I+1.0 Nmax}
-	 end
-      end
-      fun{List2 N} % cas du silence
-	 if N==0 then nil
-	 else 0.0|{List2 N-1}
-	 end
+         if I>=Nmax+1.0 then nil
+         else
+            0.5*{Sin 2.0*3.14*F*I/44100.0}|{List F I+1.0 Nmax}
+         end
+            end
+            fun{List2 N} % cas du silence
+         if N==0 then nil
+         else 0.0|{List2 N-1}
+         end
       end
    in
       case Note
@@ -195,14 +195,14 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Dans le cas où c'est un
-   fun{ToListOfVector L}
+   fun{ToListOfSample L}
       case L of nil then nil
-      [] H|T then {Append {ToVector H} {ToListOfVector T}}
-      [] A then {ToVector A}
+      [] H|T then {Append {ToSample H} {ToListOfSample T}}
+      [] A then {ToSample A}
       end
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Reverse ;) ça devrait marcher non?
    % NON TESTE
 
@@ -210,13 +210,13 @@ local
       {List.reverse L}
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Repeat ;)
    % NON TESTE
 
    fun {Repeat N L}
       if N==0 then nil
-      else L|{Repeat N-1 L}
+      else {Append L {Repeat N-1 L}}
       end
    end
 
@@ -226,20 +226,12 @@ local
 
    fun {Loop D L}
       local LTot N Crop ListLength A in
-	 LTot = {FloatToInt D*44100.0}    % Longueur totale de la liste d'output
-	 ListLength = {List.length L}     % Longueur de la musique
-	 N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
-	 Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
+         LTot = {FloatToInt D*44100.0}    % Longueur totale de la liste d'output
+         ListLength = {List.length L}     % Longueur de la musique
+         N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
+         Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
 
-	 A = {NewCell nil}
-	 for I in 1..Crop do
-	    A := {List.nth L Crop+1-I}|@A
-	 end
-	 for I in 1..N do
-	    A := {Append L @A}
-	 end
-
-	 @A
+         {Append {Repeat N L} {Cut 0 Crop L}} 
       end
    end
 
@@ -260,66 +252,71 @@ local
 	 end
       end
    end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+   fun{Cut Start End L}
+      nil
+   end
    
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      fun {Mix P2T Music}
-	 case Music
-	 of nil then nil
+   fun {Mix P2T Music}
+      case Music
+      of nil then nil
 
       % Est ce que si on a un accord en Head, ça ne va pas poser problème? J'ai pas vraiment réfléchi
       % au truc mais je me demande... ça serait pas plus simple d'utiliser un 'chord(list:...)' que de
       % faire des tableaux? Tu vas flatten tt le truc avec ton "append" je crois... Il faut checker comment
       % ça doit se passer avec des accords
-	 [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
+      [] H|T then {Append {Mix PartitionToTimedList H} {Mix PartitionToTimedList T}}
 
       % J'ai changé {PartitionToTimedList P} en {P2T P} pck dans l'énoncé ils disent de pas
       % appeler PartitionToTimedList directement
-	 [] partition(P) then  {Mix PartitionToTimedList {P2T P}}
+      [] partition(P) then  {Mix PartitionToTimedList {P2T P}}
 
       % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
       %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
-	 [] reverse(M) then {Mix PartitionToTimedList {Reverse {Mix PartitionToTimedList M}}}
+      [] reverse(M) then {Reverse {Mix PartitionToTimedList M}}
 
       % Même remarque pour {Mix PartitionToTimedList M} dans repeat
-	 [] repeat(amount:N M) then {Mix PartitionToTimedList {Repeat N {Mix PartitionToTimedList M}}}
+      [] repeat(amount:N M) then {Repeat N {Mix PartitionToTimedList M}}
 
       % Loop... ;)
-	 [] loop(seconds:D M) then {Mix PartitionToTimedList {Loop D {Mix PartitionToTimedList M}}}
+      %[] loop(seconds:D M) then {Loop D {Mix PartitionToTimedList M}}
 
       % Clip
-	 [] clip(low:L high:H M) then {Mix PartitionToTimedList {Clip L H {Mix PartitionToTimedList M}}}
+      [] clip(low:L high:H M) then {Clip L H {Mix PartitionToTimedList M}}
 
-	 [] Z then {ToListOfVector Z} % faudrait juste mettre "ToVector"
-	 end
+      [] Z then {ToListOfSample Z} % faudrait juste mettre "ToSample"
       end
+   end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      Music = {Project.load 'joy.dj.oz'}
-      Start
+   Music = repeat(amount:3 partition(drone(note:a 3)))
+   Start
 
    % Uncomment next line to insert your tests.
    % \insert 'tests.oz'
    % !!! Remove this before submitting.
-   in
-      Start = {Time}
+in
+   Start = {Time}
 
    % Uncomment next line to run your tests.
    % {Test Mix PartitionToTimedList}
 
    % Add variables to this list to avoid "local variable used only once"
    % warnings.
-      {ForAll [NoteToExtended Music] Wait}
+   {ForAll [NoteToExtended Music] Wait}
 
    % Calls your code, prints the result and outputs the result to out.wav.
    % You don't need to modify this.
-      {Browse {Project.run Mix PartitionToTimedList Music 'out.wav'}}
+   {Browse {Project.run Mix PartitionToTimedList Music 'out.wav'}}
 
    % Shows the total time to run your code.
-      {Browse {IntToFloat {Time}-Start} / 1000.0}
-   end
+   {Browse {IntToFloat {Time}-Start} / 1000.0}
+end
 
 
 % PROBLEMES !
