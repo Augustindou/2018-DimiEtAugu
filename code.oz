@@ -268,7 +268,11 @@ local
          N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
          Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
 
+<<<<<<< HEAD
+         {Append {Repeat N L} {Cut 0.0 Crop L}} 
+=======
          {Append {Repeat N L} {Cut 0 Crop L}}
+>>>>>>> 1bdd00c64acc31c494e52c7e40e2c32e04790631
       end
    end
 
@@ -289,10 +293,16 @@ local
       end
       end
    end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
 
    fun{Cut Start End L}
-      nil
+      local CutLeft CutRight in
+         CutLeft = {List.drop L {FloatToInt (Start-1.0)*44100.0}}
+         {Browse CutLeft}
+         CutRight = {List.take CutLeft {FloatToInt (End-Start+1.0)*44100.0}}
+         {Browse CutRight}
+         CutRight 
+      end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -345,7 +355,8 @@ local
       [] repeat(amount:N M) then {Repeat N {Mix P2T M}}
 
       % Loop... ;)
-      %[] loop(seconds:D M) then {Loop D {Mix PartitionToTimedList M}}
+
+      [] loop(seconds:D M) then {Loop D {Mix PartitionToTimedList M}}
 
       % Clip
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
@@ -353,13 +364,15 @@ local
       % Echo
       %[] echo(delay:Delay decay:Decay M) then {Echo Delay Decay {Mix P2T M}}
 
+      [] cut(start:S finish:F M) then {Cut S F {Mix P2T M}}
+
       [] Z then {ToListOfSample Z} % faudrait juste mettre "ToSample"
       end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   Music = repeat(amount:3 partition(drone(note:a 3)))
+   Music = {Project.load 'joy.dj.oz'}
    Start
 
    % Uncomment next line to insert your tests.
