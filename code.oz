@@ -268,11 +268,7 @@ local
          N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
          Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
 
-<<<<<<< HEAD
-         {Append {Repeat N L} {Cut 0.0 Crop L}} 
-=======
-         {Append {Repeat N L} {Cut 0 Crop L}}
->>>>>>> 1bdd00c64acc31c494e52c7e40e2c32e04790631
+         {Append {Repeat N L} {Cut 0.0 Crop L}}
       end
    end
 
@@ -294,6 +290,7 @@ local
       end
    end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
+   % Cut
 
    fun{Cut Start End L}
       local CutLeft CutRight in
@@ -301,7 +298,7 @@ local
          {Browse CutLeft}
          CutRight = {List.take CutLeft {FloatToInt (End-Start+1.0)*44100.0}}
          {Browse CutRight}
-         CutRight 
+         CutRight
       end
    end
 
