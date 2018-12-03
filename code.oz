@@ -203,6 +203,10 @@ local
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
+   % Merge
+   % NON TESTE
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Reverse ;) ça devrait marcher non?
    % NON TESTE
 
@@ -299,6 +303,9 @@ local
 
       % Clip
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
+
+      % Echo
+      %[] echo(delay:Delay decay:Decay M) then {Echo Delay Decay {Mix P2T M}}
 
       [] Z then {ToListOfSample Z} % faudrait juste mettre "ToSample"
       end
