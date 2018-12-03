@@ -202,9 +202,42 @@ local
       end
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % Merge
    % NON TESTE
+
+   fun {Merge L}
+      local Multiply Add AddFirsts in
+         % [F1#L1 F2#L2 F3#L3 ... Fn#Ln] => [F1*L1 F2*L2 F3*L3 ... Fn*Ln]
+         % (multiplication de chaque terme de Li par Fi)
+         fun {Multiply Tuple}
+            case Tuple
+            of F#M then {List.map M fun{$ E} E*F end} % Va appliquer multiplier tous les éléments de M ('E') par F
+            end
+         end
+
+         % Additionne tous les premiers termes de chaque liste dans la liste M
+         fun {AddFirsts M}
+            case M
+            of nil then 0
+            [] H|T then
+               % Ce case ne sert que dans le cas où toutes les listes de M ne sont pas de
+               % la même longueur... (à mon avis le prof va tester ça ;) )
+               case H
+               of nil then {AddFirsts T}
+               [] A|B then A+{AddFirsts T}
+               end
+            end
+         end
+
+         % Additionne toutes les listes de M terme à terme
+         fun {Add M}
+            {AddFirsts M}|{Add {List.drop M 1}}
+         end
+
+         {Add {List.map L Multiply}}
+      end
+   end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Reverse ;) ça devrait marcher non?
@@ -290,6 +323,19 @@ local
       % J'ai changé {PartitionToTimedList P} en {P2T P} pck dans l'énoncé ils disent de pas
       % appeler PartitionToTimedList directement
       [] partition(P) then  {Mix P2T {P2T P}}
+
+      % Merge
+      [] merge(Tab) then
+         local MergeMusicToSamples in
+            fun {MergeMusicToSamples Table}
+               case Table
+               of nil then nil
+               [] H|T then {MergeMusicToSamples H}|{MergeMusicToSamples T}
+               [] Factor#Music then Factor#{Mix P2T Music}
+               end
+            end
+            {Merge {MergeMusicToSamples Tab}}
+         end
 
       % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
       %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
