@@ -1,4 +1,8 @@
 
+% LFSAB1402 - Informatique 2 - Projet en Oz
+% Dimitri Doeran - 28901700
+% Augustin d'Oultremont - 22391700
+
 local
    % See project statement for API details.
    [Project] = {Link ['Project2018.ozf']}
@@ -9,6 +13,8 @@ local
 %%%      DEBUT DE LA PARTIE PARTITIONTOTIMEDLIST
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+   % @pre- Note: <note> := silence|<name>|<name><octave>|<name>#<octave>
+   % @post-
    fun {NoteToExtended Note}
       case Note
       of Name#Octave then note(name:Name octave:Octave sharp:true duration:1.0 instrument:none)
@@ -245,7 +251,6 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Reverse ;) ça devrait marcher non?
-   % NON TESTE
 
    fun {Reverse L}
       {List.reverse L}
@@ -253,7 +258,6 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Repeat ;)
-   % NON TESTE
 
    fun {Repeat N L}
       if N==0 then nil
@@ -266,13 +270,12 @@ local
    % NON TESTE
 
    fun {Loop D L}
-      local LTot N Crop ListLength A in
+      local LTot N Crop ListLength in
          LTot = {FloatToInt D*44100.0}    % Longueur totale de la liste d'output
          ListLength = {List.length L}     % Longueur de la musique
          N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
-         Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
-
-	      {Append {Repeat N L} {Cut 0.0 Crop L}}
+         Crop = {IntToFloat (LTot mod ListLength)}/44100.0       % Longueur du bout de liste à la fin
+         {Append {Repeat N L} {Cut 0.0 Crop L}}
       end
    end
 
@@ -291,11 +294,38 @@ local
          end
       end
    end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Cut
 
    fun{Cut Start End L}
       {List.take {List.drop L {FloatToInt (Start-1.0)*44100.0}} {FloatToInt (End-Start+1.0)*44100.0}}
+   end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Echo
+   % NON TESTE
+
+   fun {Echo Delay Decay L}
+      local ListOf0 in
+         fun {ListOf0 Lgth}
+            if Lgth==0 then nil
+            else 0.0|{ListOf0 Lgth-1}
+            end
+         end
+         {Merge [1.0#L Decay#{Append {ListOf0 {FloatToInt Delay*44100.0}} L}]}
+      end
+   end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Chord
+   % NON TESTE
+
+   fun {Chord L}
+      local Factor in
+         Factor = 1.0/{IntToFloat {List.length L}}
+         chord({List.map L fun{$ Element} Factor#Element end})
+      end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -308,33 +338,31 @@ local
       % au truc mais je me demande... ça serait pas plus simple d'utiliser un 'chord(list:...)' que de
       % faire des tableaux? Tu vas flatten tt le truc avec ton "append" je crois... Il faut checker comment
       % ça doit se passer avec des accords
-      [] H|T then {Append {Mix P2T H} {Mix P2T T}}
+      [] H|T then
+         if {List.is H} then {Append {Mix P2T {Chord H}} {Mix P2T T}}
+         else {Append {Mix P2T H} {Mix P2T T}}
+         end
 
-      % J'ai changé {PartitionToTimedList P} en {P2T P} pck dans l'énoncé ils disent de pas
-      % appeler PartitionToTimedList directement
-      [] partition(P) then  {Mix P2T {P2T P}}
+      [] partition(P) then {Mix P2T {P2T P}}
 
-      
-      [] merge(List) then {Merge List} 
 
-      % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
-      %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
+      [] merge(List) then {Merge List}
+
+      [] wave(FileName) then {Project.readFile FileName}
+
+
       [] reverse(M) then {Reverse {Mix P2T M}}
-
-      % Même remarque pour {Mix PartitionToTimedList M} dans repeat
       [] repeat(amount:N M) then {Repeat N {Mix P2T M}}
 
       % Loop... ;)
-
       %[] loop(seconds:D M) then {Loop D {Mix P2T M}}
 
-      % Clip
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
 
       % Echo
-      %[] echo(delay:Delay decay:Decay M) then {Echo Delay Decay {Mix P2T M}}
+      %[] echo(delay:Delay decay:Decay M) then {Echo Delay Decay M}w
 
-      [] cut(start:S finish:F M) then {Cut S F {Mix P2T M}}
+      %[] cut(start:S finish:F M) then {Cut S F {Mix P2T M}}
 
       [] Z then {ToListOfSample Z} % faudrait juste mettre "ToSample"
       end
