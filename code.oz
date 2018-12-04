@@ -209,7 +209,7 @@ local
             case ListOfTuple
             of nil then nil
             [] H|T then {MusicToSample H}|{MusicToSample T}
-            [] I#M then I#{Mix P2T M}
+            [] I#M then I#{Mix PartitionToTimedList M}
             end
          end
          % [F1#L1 F2#L2 F3#L3 ... Fn#Ln] => [F1*L1 F2*L2 F3*L3 ... Fn*Ln]
