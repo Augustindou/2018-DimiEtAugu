@@ -144,7 +144,7 @@ local
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{HeightOfNote Note}
-      local H S in
+      local S in
          case Note.name#Note.sharp
          of a#false then S=0
          [] a#true then S=1
@@ -159,8 +159,7 @@ local
          [] g#false then S=~2
          [] g#true then S=~1
          end
-         H = (Note.octave-4)*12+S      % on peut juste mettre (Note.octave-4)*12+S aussi
-         H                             % au lieu de définir H et de le renvoyer
+         (Note.octave-4)*12+S
       end
    end
 
@@ -230,7 +229,7 @@ local
 
          % Additionne toutes les listes de M terme à terme
          fun {Add M}
-            {AddFirsts M}|{Add {List.drop M 1}}
+            {AddFirsts M}|{Add {List.map M fun{$ E} {List.drop E 1} end}}
          end
 
          {Add {List.map L Multiply}}
@@ -289,13 +288,7 @@ local
    % Cut
 
    fun{Cut Start End L}
-      local CutLeft CutRight in
-         CutLeft = {List.drop L {FloatToInt (Start-1.0)*44100.0}}
-         {Browse CutLeft}
-         CutRight = {List.take CutLeft {FloatToInt (End-Start+1.0)*44100.0}}
-         {Browse CutRight}
-         CutRight
-      end
+      {List.take {List.drop L {FloatToInt (Start-1.0)*44100.0}} {FloatToInt (End-Start+1.0)*44100.0}}
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -351,7 +344,7 @@ local
 
       % Loop... ;)
 
-      [] loop(seconds:D M) then {Loop D {Mix PartitionToTimedList M}}
+      [] loop(seconds:D M) then {Loop D {Mix P2T M}}
 
       % Clip
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
@@ -406,5 +399,5 @@ end
 %
 % 6) Faire des tests pour un peu tt
 %
-%
+% 7) Virer les Browse et transformer 5 lignes en 1 dans CUT
 %
