@@ -141,7 +141,7 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%      DEBUT DE LA PARTIE MIX
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OK
 
    fun{HeightOfNote Note}
       local S in
@@ -163,7 +163,7 @@ local
       end
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{ToSample Note}
       Freq
@@ -204,7 +204,14 @@ local
    % NON TESTE
 
    fun {Merge L}
-      local Multiply Add AddFirsts in
+      local Multiply Add AddFirsts MusicToSample in
+         fun{MusicToSample ListOfTuple}
+            case ListOfTuple
+            of nil then nil
+            [] H|T then {MusicToSample H}|{MusicToSample T}
+            [] I#M then I#{Mix P2T M}
+            end
+         end
          % [F1#L1 F2#L2 F3#L3 ... Fn#Ln] => [F1*L1 F2*L2 F3*L3 ... Fn*Ln]
          % (multiplication de chaque terme de Li par Fi)
          fun {Multiply Tuple}
@@ -232,7 +239,7 @@ local
             {AddFirsts M}|{Add {List.map M fun{$ E} {List.drop E 1} end}}
          end
 
-         {Add {List.map L Multiply}}
+         {Add {List.map {MusicToSample L} Multiply}}
       end
    end
 
@@ -323,17 +330,7 @@ local
       [] partition(P) then  {Mix P2T {P2T P}}
 
       % Merge
-      [] merge(Tab) then
-         local MergeMusicToSamples in
-            fun {MergeMusicToSamples Table}
-               case Table
-               of nil then nil
-               [] H|T then {MergeMusicToSamples H}|{MergeMusicToSamples T}
-               [] Factor#Music then Factor#{Mix P2T Music}
-               end
-            end
-            {Merge {MergeMusicToSamples Tab}}
-         end
+      [] merge(FM) then {Merge FM}
 
       % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
       %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
