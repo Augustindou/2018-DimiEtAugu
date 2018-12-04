@@ -306,10 +306,10 @@ local
       local ListOf0 in
          fun {ListOf0 Lgth}
             if Lgth==0 then nil
-            else 0|{ListOf0 Lgth-1}
+            else 0.0|{ListOf0 Lgth-1}
             end
          end
-      {Merge [1.0#L Decay#{Append {ListOf0 Delay*44100} L}]}
+      {Merge [1.0#L Decay#{Append {ListOf0 {FloatToInt Delay*44100.0}} L}]}
       end
    end
 
