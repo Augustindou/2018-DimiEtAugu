@@ -32,7 +32,7 @@ local
       of nil then nil
       [] H|T then {Stretch F H}|{Stretch F T}
       [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)
-      then note(duration:D*F name:Name octave:Octave sharp:Boolean instrument:I)
+         then note(duration:D*F name:Name octave:Octave sharp:Boolean instrument:I)
       [] silence(duration:D) then silence(duration:D*F)
       end
    end
@@ -134,7 +134,7 @@ local
       [] transpose(semitones:S P) then {Transpose S {PartitionToTimedList P}}
       [] silence(duration:D) then [silence(duration:D)] %%Dimi
       [] note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)
-      then [note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)] %%DIMI
+         then [note(duration:D name:Name octave:Octave sharp:Boolean instrument:I)] %%DIMI
       [] Note then [{NoteToExtended Note}] %%Dimi %%Warning
       end
    end
@@ -304,12 +304,13 @@ local
 
    fun {Echo Delay Decay L}
       local ListOf0 in
-      fun {ListOf0 Lgth}
-         if Lgth==0 then nil
-         else 0|{ListOf0 Lgth-1}
+         fun {ListOf0 Lgth}
+            if Lgth==0 then nil
+            else 0|{ListOf0 Lgth-1}
+            end
          end
-      end
       {Merge [1.0#L Decay#{Append {ListOf0 Delay*44100} L}]}
+      end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
