@@ -212,7 +212,10 @@ local
 
    fun {Merge PT FM}
       fun {MusicIntensitiesToSampleIntensities PtoT A}
-         {List.map A fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
+         case A
+         of H|T then {List.map A fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
+         else {List.map A|nil fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
+         end
       end
       fun {MultiplyByFactor A}
          {List.map A fun{$ Element} case Element of F#Sams then {List.map Sams fun{$ E} E*F end} end end}
@@ -256,7 +259,7 @@ local
    % NON TESTE
 
    fun {Loop D L}
-      local LTot N Crop ListLength in
+      local LTot ListLength in
          LTot = {FloatToInt D*44100.0}    % Longueur totale de la liste d'output
          ListLength = {List.length L}     % Longueur de la musique
          {Append {Repeat (LTot div ListLength) L} {Cut 0 (LTot mod ListLength) L}}
