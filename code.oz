@@ -185,8 +185,10 @@ local
          H={IntToFloat {HeightOfNote Note}}
          Freq={Pow 2.0 H/12.0}*440.0
          Nmax=Note.duration*44100.0
-         {List Freq 1.0 Nmax}
-      [] silence(duree:D) then {List2 {FloatToInt D*44100.0}}
+	      {List Freq 1.0 Nmax}
+	 
+      [] silence(duration:D) then {List2 {FloatToInt D*44100.0}}
+      else Note
       end
    end
 
@@ -295,8 +297,54 @@ local
    % Cut
 
    fun{Cut Start End L}
-      {List.take {List.drop L {FloatToInt (Start-1.0)*44100.0}} {FloatToInt (End-Start+1.0)*44100.0}}
+      {List.take {List.drop L {FloatToInt (Start*44100.0)-1.0}} {FloatToInt (((End-Start)*44100.0)+1.0)}}
    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fun{Fade Start Finish Music}
+   fun{FadeLeft Start Music Acc}
+      case Music
+      of H|T then 
+         %{Browse 'Longueur de la music'}{Browse {List.length Music}}
+         if Acc==Start*44100.0 then Music
+         else (Acc/(Start*44100.0))*H|{FadeLeft Start Acc+1.0 T} 
+         end
+      [] nil then nil 
+      end
+   end
+
+   fun{FadeRight Finish Music}
+      X
+      Y
+      fun{Aux I Vecteur}
+         if I>{FloatToInt {List.length Vecteur}} then nil
+         else (1.0-(I/({IntToFloat {List.length Vecteur}})))*Vecteur.1|{Aux I+1.0 Vecteur.2} 
+         end
+      end     
+   in
+      {List.takeDrop Music {FloatToInt {IntToFloat {List.length Music}}-(Finish*44100.0)-1.0} X Y}
+      % X= les premiers elements et Y=les derniers elements
+      
+      {Append X {Aux 1.0 Y}}
+   end
+
+   % fun{FadeRight Finish Music Acc}
+   %     local 
+   %         MusicLength = {IntToFloat {List.length Music}}
+   %         LeftList = {Cut 0.0 ((MusicLength-(Finish*44100.0)-1.0)/44100.0) Music}                %% {Cut 0.0 11019/44100 Music} -> Tab de pos 0 à 11020(11019)
+   %         RightList = {Cut ((MusicLength-(Finish*44100.0))/44100.0) MusicLength/44100.0 Music}   %% {Cut 11020/44100 11025/44100 Music} -> Tab de pos 11019(11020) à 6
+   %         %{Browse 'Longueur du LefttList :'}{Browse {List.length LeftList}}
+   %         %{Browse 'Longueur du RightList :'}{Browse {List.length RightList}}
+   %     in
+   %         {Append LeftList {Reverse {FadeLeft Finish RightList Acc}}}
+   %     end
+   % end
+
+in
+   %{Browse Music}
+   {FadeLeft Start {FadeRight Finish Music} 0.0}    
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -336,7 +384,10 @@ local
 
       [] cut(start:S finish:F M) then {Cut S F {Mix P2T M}}
 
-      [] Z then {ToListOfSample Z} % faudrait juste mettre "ToSample"
+      [] Z then 
+         if Z.duration > 10.0/44100.0 then {Fade 5.0/44100.0 5.0/44100.0 {ToSample Z}}
+         else {ToListOfSample Z} % faudrait juste mettre "ToSample"
+         end
       end
    end
 
