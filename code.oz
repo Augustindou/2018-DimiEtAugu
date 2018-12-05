@@ -57,7 +57,7 @@ local
                {TotalDuration T Acc+H.duration}
             end
                      %{TotalDuration T Acc+H.duration} %% Dimi
-         [] Z then Z.duration
+         [] _ then Note.duration
          end
       end
       DTot={TotalDuration Note 0.0}
@@ -132,7 +132,7 @@ local
          case H
          of H1|T2 then {Flatten ({PartitionToTimedList H1}|{PartitionToTimedList T2})}|{PartitionToTimedList T}
                                  %Flatten pour le problemes des accords (la premiere note etait une liste )
-         [] Z then {Append {PartitionToTimedList H} {PartitionToTimedList T}}
+         [] _ then {Append {PartitionToTimedList H} {PartitionToTimedList T}}
          end
       [] drone(note:Note N) then {Drone {PartitionToTimedList Note} N}
       [] stretch(factor:F P) then {Stretch F {PartitionToTimedList P}}
