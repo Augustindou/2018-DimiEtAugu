@@ -220,8 +220,8 @@ local
       fun {AddLists L1 L2}
          case L1#L2
          of nil#nil then nil
-         [] (H|T)#nil then H|{AddLists T nil}
-         [] nil#(H|T) then H|{AddLists nil T}
+         [] List#nil then L1
+         [] nil#List then L2
          [] (H1|T1)#(H2|T2) then (H1+H2)|{AddLists T1 T2}
          end
       end
