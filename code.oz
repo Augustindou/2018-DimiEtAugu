@@ -1,4 +1,8 @@
 
+% LFSAB1402 - Informatique 2 - Projet en Oz
+% Dimitri Doeran - 28901700
+% Augustin d'Oultremont - 22391700
+
 local
    % See project statement for API details.
    [Project] = {Link ['Project2018.ozf']}
@@ -9,6 +13,8 @@ local
 %%%      DEBUT DE LA PARTIE PARTITIONTOTIMEDLIST
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+   % @pre- Note: <note> := silence|<name>|<name><octave>|<name>#<octave>
+   % @post-
    fun {NoteToExtended Note}
       case Note
       of Name#Octave then note(name:Name octave:Octave sharp:true duration:1.0 instrument:none)
@@ -173,8 +179,8 @@ local
          if I>=Nmax+1.0 then nil
          else 0.5*{Sin 2.0*3.14*F*I/44100.0}|{List F I+1.0 Nmax}
          end
-            end
-            fun{List2 N} % cas du silence
+      end
+      fun{List2 N} % cas du silence
          if N==0 then nil
          else 0.0|{List2 N-1}
          end
@@ -185,8 +191,7 @@ local
          H={IntToFloat {HeightOfNote Note}}
          Freq={Pow 2.0 H/12.0}*440.0
          Nmax=Note.duration*44100.0
-	      {List Freq 1.0 Nmax}
-	 
+         {List Freq 1.0 Nmax}
       [] silence(duration:D) then {List2 {FloatToInt D*44100.0}}
       else Note
       end
@@ -205,49 +210,33 @@ local
    % Merge
    % NON TESTE
 
-   fun {Merge L}
-      local Multiply Add AddFirsts MusicToSample in
-         fun{MusicToSample ListOfTuple}
-            case ListOfTuple
-            of nil then nil
-            [] H|T then {MusicToSample H}|{MusicToSample T}
-            [] I#M then I#{Mix PartitionToTimedList M}
-            end
-         end
-         % [F1#L1 F2#L2 F3#L3 ... Fn#Ln] => [F1*L1 F2*L2 F3*L3 ... Fn*Ln]
-         % (multiplication de chaque terme de Li par Fi)
-         fun {Multiply Tuple}
-            case Tuple
-            of F#M then {List.map M fun{$ E} E*F end} % Va appliquer multiplier tous les éléments de M ('E') par F
-            end
-         end
-
-               % Additionne tous les premiers termes de chaque liste dans la liste M
-         fun {AddFirsts M}
-            case M
-            of nil then 0
-            [] H|T then
-                     % Ce case ne sert que dans le cas où toutes les listes de M ne sont pas de
-                     % la même longueur... (à mon avis le prof va tester ça ;) )
-               case H
-               of nil then {AddFirsts T}
-               [] A|B then A+{AddFirsts T}
-               end
-            end
-         end
-
-               % Additionne toutes les listes de M terme à terme
-         fun {Add M}
-            {AddFirsts M}|{Add {List.map M fun{$ E} {List.drop E 1} end}}
-         end
-
-         {Add {List.map {MusicToSample L} Multiply}}
+   fun {Merge PT FM}
+      fun {MusicIntensitiesToSampleIntensities PtoT A}
+         {List.map A fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
       end
+      fun {MultiplyByFactor A}
+         {List.map A fun{$ Element} case Element of F#Sams then {List.map Sams fun{$ E} E*F end} end end}
+      end
+      fun {AddLists L1 L2}
+         case L1#L2
+         of nil#nil then nil
+         [] (H|T)#nil then H|{AddLists T nil}
+         [] nil#(H|T) then H|{AddLists nil T}
+         [] (H1|T1)#(H2|T2) then (H1+H2)|{AddLists T1 T2}
+         end
+      end
+      fun {MergeSum A Acc}
+         case A
+         of nil then Acc
+         [] H|T then {MergeSum T {AddLists H Acc}}
+         end
+      end
+   in
+      {MergeSum {MultiplyByFactor {MusicIntensitiesToSampleIntensities PT FM}} nil}
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Reverse ;) ça devrait marcher non?
-   % NON TESTE
 
    fun {Reverse L}
       {List.reverse L}
@@ -255,7 +244,6 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Repeat ;)
-   % NON TESTE
 
    fun {Repeat N L}
       if N==0 then nil
@@ -268,13 +256,10 @@ local
    % NON TESTE
 
    fun {Loop D L}
-      local LTot N Crop ListLength A in
+      local LTot N Crop ListLength in
          LTot = {FloatToInt D*44100.0}    % Longueur totale de la liste d'output
          ListLength = {List.length L}     % Longueur de la musique
-         N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
-         Crop = LTot mod ListLength       % Longueur du bout de liste à la fin
-
-	      {Append {Repeat N L} {Cut 0.0 Crop L}}
+         {Append {Repeat (LTot div ListLength) L} {Cut 0 (LTot mod ListLength) L}}
       end
    end
 
@@ -293,58 +278,71 @@ local
          end
       end
    end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Cut
 
-   fun{Cut Start End L}
-      {List.take {List.drop L {FloatToInt (Start*44100.0)-1.0}} {FloatToInt (((End-Start)*44100.0)+1.0)}}
+   fun{Cut Start End L} % /!\ Start et End ENTIERS = secondes*44100
+      if L==nil then nil
+      elseif Start > 0 then {Cut Start-1 End-1 L.2}
+      else
+         if End > 0 then L.1|{Cut 0 End-1 L.2}
+         else nil
+         end
+      end
+   end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Echo
+   % NON TESTE
+
+   fun {Echo Delay Decay M}
+      Tot = 1.0+Decay
+   in
+      merge([(1.0/Tot)#M (Decay/Tot)#(silence(duration:Delay)|M)])
+   end % /Tot est pour éviter de dépasser l'intervalle avec un écho
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Chord
+   % NON TESTE
+
+   fun {Chord L}
+      local Factor in
+         Factor = 1.0/{IntToFloat {List.length L}}
+         merge({List.map L fun{$ Element} Factor#Element end})
+      end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fun{Fade Start Finish Music}
-   fun{FadeLeft Start Music Acc}
-      case Music
-      of H|T then 
-         %{Browse 'Longueur de la music'}{Browse {List.length Music}}
-         if Acc==Start*44100.0 then Music
-         else (Acc/(Start*44100.0))*H|{FadeLeft Start Acc+1.0 T} 
-         end
-      [] nil then nil 
-      end
-   end
+   % fun{Fade Start Finish Music}
+   %    fun{FadeLeft Start Music Acc}
+   % 	 case Music
+   % 	 of H|T then 
+   %       %{Browse 'Longueur de la music'}{Browse {List.length Music}}
+   % 	    if Acc==Start*44100.0 then Music
+   % 	    else (Acc/(Start*44100.0))*H|{FadeLeft Start Acc+1.0 T} 
+   % 	    end
+   % 	 [] nil then nil 
+   % 	 end
+   %    end
 
-   fun{FadeRight Finish Music}
-      X
-      Y
-      fun{Aux I Vecteur}
-         if I>{FloatToInt {List.length Vecteur}} then nil
-         else (1.0-(I/({IntToFloat {List.length Vecteur}})))*Vecteur.1|{Aux I+1.0 Vecteur.2} 
-         end
-      end     
-   in
-      {List.takeDrop Music {FloatToInt {IntToFloat {List.length Music}}-(Finish*44100.0)-1.0} X Y}
-      % X= les premiers elements et Y=les derniers elements
-      
-      {Append X {Aux 1.0 Y}}
-   end
+   %    fun{FadeRight Finish Music Acc}
+   % 	 local 
+   % 	    MusicLength = {IntToFloat {List.length Music}}
+   % 	    LeftList = {Cut 0 { FloatToInt ((MusicLength-(Finish*44100.0)-1.0)/44100.0)} Music}                %% {Cut 0.0 11019/44100 Music} -> Tab de pos 0 à 11020(11019)
+   % 	    RightList = {Cut {FloatToInt ((MusicLength-(Finish*44100.0))/44100.0)} {FloatToInt MusicLength/44100.0 Music}}   %% {Cut 11020/44100 11025/44100 Music} -> Tab de pos 11019(11020) à 6
+   %          %{Browse 'Longueur du LefttList :'}{Browse {List.length LeftList}}
+   %          %{Browse 'Longueur du RightList :'}{Browse {List.length RightList}}
+   % 	 in
+   % 	    {Append LeftList {Reverse {FadeLeft Finish RightList Acc}}}
+   % 	 end
+   %    end
 
-   % fun{FadeRight Finish Music Acc}
-   %     local 
-   %         MusicLength = {IntToFloat {List.length Music}}
-   %         LeftList = {Cut 0.0 ((MusicLength-(Finish*44100.0)-1.0)/44100.0) Music}                %% {Cut 0.0 11019/44100 Music} -> Tab de pos 0 à 11020(11019)
-   %         RightList = {Cut ((MusicLength-(Finish*44100.0))/44100.0) MusicLength/44100.0 Music}   %% {Cut 11020/44100 11025/44100 Music} -> Tab de pos 11019(11020) à 6
-   %         %{Browse 'Longueur du LefttList :'}{Browse {List.length LeftList}}
-   %         %{Browse 'Longueur du RightList :'}{Browse {List.length RightList}}
-   %     in
-   %         {Append LeftList {Reverse {FadeLeft Finish RightList Acc}}}
-   %     end
+   % in
+   % %{Browse Music}
+   %    {FadeLeft Start {FadeRight Finish Music} 0.0}    
    % end
-
-in
-   %{Browse Music}
-   {FadeLeft Start {FadeRight Finish Music} 0.0}    
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -356,38 +354,36 @@ end
       % au truc mais je me demande... ça serait pas plus simple d'utiliser un 'chord(list:...)' que de
       % faire des tableaux? Tu vas flatten tt le truc avec ton "append" je crois... Il faut checker comment
       % ça doit se passer avec des accords
-      [] H|T then {Append {Mix P2T H} {Mix P2T T}}
+      [] H|T then
+         if {List.is H} then {Append {Mix P2T {Chord H}} {Mix P2T T}}
+         else {Append {Mix P2T H} {Mix P2T T}}
+         end
 
-      % J'ai changé {PartitionToTimedList P} en {P2T P} pck dans l'énoncé ils disent de pas
-      % appeler PartitionToTimedList directement
-      [] partition(P) then  {Mix P2T {P2T P}}
+      [] partition(P) then {Mix P2T {P2T P}}
 
-      
-      [] merge(List) then {Merge List} 
 
-      % En gros je vais reverse un tableau de note, extended note et tt ce que tu vx
-      %(d'où le {Mix PartitionToTimedList M} dans reverse, pour obtenir une timed list)
+      [] merge(List) then {Merge P2T List}
+
+      [] wave(FileName) then {Project.readFile FileName}
+
+
       [] reverse(M) then {Reverse {Mix P2T M}}
-
-      % Même remarque pour {Mix PartitionToTimedList M} dans repeat
       [] repeat(amount:N M) then {Repeat N {Mix P2T M}}
 
       % Loop... ;)
+      [] loop(seconds:D M) then {Loop D {Mix P2T M}}
 
-      %[] loop(seconds:D M) then {Loop D {Mix P2T M}}
-
-      % Clip
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
 
       % Echo
-      %[] echo(delay:Delay decay:Decay M) then {Echo Delay Decay {Mix P2T M}}
+      [] echo(delay:Delay decay:Decay M) then {Mix P2T {Echo Delay Decay M}}
 
-      [] cut(start:S finish:F M) then {Cut S F {Mix P2T M}}
+      [] cut(start:S finish:F M) then {Cut {FloatToInt S*44100.0} {FloatToInt F*44100.0} {Mix P2T M}}
 
-      [] Z then 
-         if Z.duration > 10.0/44100.0 then {Fade 5.0/44100.0 5.0/44100.0 {ToSample Z}}
-         else {ToListOfSample Z} % faudrait juste mettre "ToSample"
-         end
+      [] Z then {ToListOfSample Z}
+         %if Z.duration > 10.0/44100.0 then {Fade 5.0/44100.0 5.0/44100.0 {ToSample Z}}
+         %else {ToListOfSample Z} % faudrait juste mettre "ToSample"
+         %end
       end
    end
 
