@@ -301,7 +301,7 @@ local
 
    fun {Echo Delay Decay M}
       merge([1.0#M Decay#(silence(duration:Delay)|M)])
-   end % /Tot est pour éviter de dépasser l'intervalle avec un écho
+   end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % Chord
