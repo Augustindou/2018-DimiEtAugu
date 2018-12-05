@@ -374,8 +374,8 @@ local
       [] cut(start:S finish:F M) then {Cut {FloatToInt S*44100.0} {FloatToInt F*44100.0} {Mix P2T M}}
       [] fade(start:Start out:Out M) then {Fade Start Out {Mix P2T M}}
       [] Z then
-         if (Z.duration > 10.0/44100.0) then {Fade 5.0/44100.0 5.0/44100.0 {ToSample Z}}
-         %elseif (Z.duration > 500.0/44100.0) then {Fade 250.0/44100.0 250.0/44100.0 {ToSample Z}}
+         if (Z.duration > 1000.0/44100.0) then {Fade 500.0/44100.0 500.0/44100.0 {ToSample Z}}
+         elseif (Z.duration > 500.0/44100.0) then {Fade 250.0/44100.0 250.0/44100.0 {ToSample Z}}
          else {ToListOfSample Z} % faudrait juste mettre "ToSample"
          end
       end
@@ -383,7 +383,7 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   Music = {Project.load 'joy.dj.oz'}
+   Music = {Project.load 'LettreAElise.oz'}
    Start
 
    % Uncomment next line to insert your tests.
