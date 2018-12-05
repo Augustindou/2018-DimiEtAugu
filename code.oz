@@ -192,7 +192,8 @@ local
          Freq={Pow 2.0 H/12.0}*440.0
          Nmax=Note.duration*44100.0
          {List Freq 1.0 Nmax}
-      [] silence(duree:D) then {List2 {FloatToInt D*44100.0}}
+      [] silence(duration:D) then {List2 {FloatToInt D*44100.0}}
+      else Note
       end
    end
 
@@ -209,44 +210,29 @@ local
    % Merge
    % NON TESTE
 
-   fun {Merge L}
-      local Multiply Add AddFirsts MusicToSample in
-         fun{MusicToSample ListOfTuple}
-            case ListOfTuple
-            of nil then nil
-            [] H|T then {MusicToSample H}|{MusicToSample T}
-            [] I#M then I#{Mix PartitionToTimedList M}
-            end
-         end
-         % [F1#L1 F2#L2 F3#L3 ... Fn#Ln] => [F1*L1 F2*L2 F3*L3 ... Fn*Ln]
-         % (multiplication de chaque terme de Li par Fi)
-         fun {Multiply Tuple}
-            case Tuple
-            of F#M then {List.map M fun{$ E} E*F end} % Va appliquer multiplier tous les éléments de M ('E') par F
-            end
-         end
-
-               % Additionne tous les premiers termes de chaque liste dans la liste M
-         fun {AddFirsts M}
-            case M
-            of nil then 0
-            [] H|T then
-                     % Ce case ne sert que dans le cas où toutes les listes de M ne sont pas de
-                     % la même longueur... (à mon avis le prof va tester ça ;) )
-               case H
-               of nil then {AddFirsts T}
-               [] A|B then A+{AddFirsts T}
-               end
-            end
-         end
-
-               % Additionne toutes les listes de M terme à terme
-         fun {Add M}
-            {AddFirsts M}|{Add {List.map M fun{$ E} {List.drop E 1} end}}
-         end
-
-         {Add {List.map {MusicToSample L} Multiply}}
+   fun {Merge PT FM}
+      fun {MusicIntensitiesToSampleIntensities PtoT A}
+         {List.map A fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
       end
+      fun {MultiplyByFactor A}
+         {List.map A fun{$ Element} case Element of F#Sams then {List.map Sams fun{$ E} E*F end} end end}
+      end
+      fun {AddLists L1 L2}
+         case L1#L2
+         of nil#nil then nil
+         [] (H|T)#nil then H|{AddLists T nil}
+         [] nil#(H|T) then H|{AddLists nil T}
+         [] (H1|T1)#(H2|T2) then (H1+H2)|{AddLists T1 T2}
+         end
+      end
+      fun {MergeSum A Acc}
+         case A
+         of nil then Acc
+         [] H|T then {MergeSum T {AddLists H Acc}}
+         end
+      end
+   in
+      {MergeSum {MultiplyByFactor {MusicIntensitiesToSampleIntensities PT FM}} nil}
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
@@ -273,9 +259,7 @@ local
       local LTot N Crop ListLength in
          LTot = {FloatToInt D*44100.0}    % Longueur totale de la liste d'output
          ListLength = {List.length L}     % Longueur de la musique
-         N = LTot div ListLength          % Nombre de fois que la musique doit être mise en entier
-         Crop = {IntToFloat (LTot mod ListLength)}/44100.0       % Longueur du bout de liste à la fin
-         {Append {Repeat N L} {Cut 0.0 Crop L}}
+         {Append {Repeat (LTot div ListLength) L} {Cut 0 (LTot mod ListLength) L}}
       end
    end
 
@@ -298,24 +282,25 @@ local
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  OK
    % Cut
 
-   fun{Cut Start End L}
-      {List.take {List.drop L {FloatToInt (Start-1.0)*44100.0}} {FloatToInt (End-Start+1.0)*44100.0}}
+   fun{Cut Start End L} % /!\ Start et End ENTIERS = secondes*44100
+      if L==nil then nil
+      elseif Start > 0 then {Cut Start-1 End-1 L.2}
+      else
+         if End > 0 then L.1|{Cut 0 End-1 L.2}
+         else nil
+         end
+      end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % Echo
    % NON TESTE
 
-   fun {Echo Delay Decay L}
-      local ListOf0 in
-         fun {ListOf0 Lgth}
-            if Lgth==0 then nil
-            else 0.0|{ListOf0 Lgth-1}
-            end
-         end
-         {Merge [1.0#L Decay#{Append {ListOf0 {FloatToInt Delay*44100.0}} L}]}
-      end
-   end
+   fun {Echo Delay Decay M}
+      Tot = 1.0+Decay
+   in
+      merge([(1.0/Tot)#M (Decay/Tot)#(silence(duration:Delay)|M)])
+   end % /Tot est pour éviter de dépasser l'intervalle avec un écho
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % Chord
@@ -324,7 +309,7 @@ local
    fun {Chord L}
       local Factor in
          Factor = 1.0/{IntToFloat {List.length L}}
-         chord({List.map L fun{$ Element} Factor#Element end})
+         merge({List.map L fun{$ Element} Factor#Element end})
       end
    end
 
@@ -346,7 +331,7 @@ local
       [] partition(P) then {Mix P2T {P2T P}}
 
 
-      [] merge(List) then {Merge List}
+      [] merge(List) then {Merge P2T List}
 
       [] wave(FileName) then {Project.readFile FileName}
 
@@ -355,14 +340,14 @@ local
       [] repeat(amount:N M) then {Repeat N {Mix P2T M}}
 
       % Loop... ;)
-      %[] loop(seconds:D M) then {Loop D {Mix P2T M}}
+      [] loop(seconds:D M) then {Loop D {Mix P2T M}}
 
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
 
       % Echo
-      %[] echo(delay:Delay decay:Decay M) then {Echo Delay Decay M}w
+      [] echo(delay:Delay decay:Decay M) then {Mix P2T {Echo Delay Decay M}}
 
-      %[] cut(start:S finish:F M) then {Cut S F {Mix P2T M}}
+      [] cut(start:S finish:F M) then {Cut {FloatToInt S*44100.0} {FloatToInt F*44100.0} {Mix P2T M}}
 
       [] Z then {ToListOfSample Z} % faudrait juste mettre "ToSample"
       end
