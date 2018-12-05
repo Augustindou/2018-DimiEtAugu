@@ -213,7 +213,7 @@ local
    fun {Merge PT FM}
       fun {MusicIntensitiesToSampleIntensities PtoT A}
          case A
-         of H|T then {List.map A fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
+         of _|_ then {List.map A fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
          else {List.map A|nil fun{$ Element} case Element of F#Mus then F#{Mix PtoT Mus} end end}
          end
       end
@@ -223,8 +223,8 @@ local
       fun {AddLists L1 L2}
          case L1#L2
          of nil#nil then nil
-         [] List#nil then L1
-         [] nil#List then L2
+         [] _#nil then L1
+         [] nil#_ then L2
          [] (H1|T1)#(H2|T2) then (H1+H2)|{AddLists T1 T2}
          end
       end
@@ -286,10 +286,17 @@ local
    % Cut
 
    fun{Cut Start End L} % /!\ Start et End ENTIERS = secondes*44100
-      if L==nil then nil
-      elseif Start > 0 then {Cut Start-1 End-1 L.2}
+      if Start > 0 then
+         case L
+         of _|T then {Cut Start-1 End-1 T}
+         else {Cut Start-1 End-1 L}
+         end
       else
-         if End > 0 then L.1|{Cut 0 End-1 L.2}
+         if End > 0 then
+            case L
+            of H|T then H|{Cut 0 End-1 T}
+            else 0.0|{Cut 0 End-1 L}
+            end
          else nil
          end
       end
@@ -367,8 +374,8 @@ local
       [] cut(start:S finish:F M) then {Cut {FloatToInt S*44100.0} {FloatToInt F*44100.0} {Mix P2T M}}
       [] fade(start:Start out:Out M) then {Fade Start Out {Mix P2T M}}
       [] Z then
-         if (Z.duration > 1000.0/44100.0) then {Fade 500.0/44100.0 500.0/44100.0 {ToSample Z}}
-         elseif (Z.duration > 500.0/44100.0) then {Fade 250.0/44100.0 250.0/44100.0 {ToSample Z}}
+         if (Z.duration > 10.0/44100.0) then {Fade 5.0/44100.0 5.0/44100.0 {ToSample Z}}
+         %elseif (Z.duration > 500.0/44100.0) then {Fade 250.0/44100.0 250.0/44100.0 {ToSample Z}}
          else {ToListOfSample Z} % faudrait juste mettre "ToSample"
          end
       end
@@ -376,7 +383,7 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   Music = {Project.load 'LettreAElise.oz'}
+   Music = {Project.load 'joy.dj.oz'}
    Start
 
    % Uncomment next line to insert your tests.
