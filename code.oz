@@ -300,9 +300,7 @@ local
    % NON TESTE
 
    fun {Echo Delay Decay M}
-      Tot = 1.0+Decay
-   in
-      merge([(1.0/Tot)#M (Decay/Tot)#(silence(duration:Delay)|M)])
+      merge([1.0#M Decay#(silence(duration:Delay)|M)])
    end % /Tot est pour éviter de dépasser l'intervalle avec un écho
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
