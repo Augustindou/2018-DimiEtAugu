@@ -376,7 +376,7 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   Music = {Project.load 'joy.dj.oz'}
+   Music = {Project.load 'LettreAElise.oz'}
    Start
 
    % Uncomment next line to insert your tests.
