@@ -351,34 +351,19 @@ local
       case Music
       of nil then nil
 
-      % Est ce que si on a un accord en Head, ça ne va pas poser problème? J'ai pas vraiment réfléchi
-      % au truc mais je me demande... ça serait pas plus simple d'utiliser un 'chord(list:...)' que de
-      % faire des tableaux? Tu vas flatten tt le truc avec ton "append" je crois... Il faut checker comment
-      % ça doit se passer avec des accords
       [] H|T then
          if {List.is H} then {Append {Mix P2T {Chord H}} {Mix P2T T}}
          else {Append {Mix P2T H} {Mix P2T T}}
          end
 
       [] partition(P) then {Mix P2T {P2T P}}
-
-
       [] merge(List) then {Merge P2T List}
-
       [] wave(FileName) then {Project.readFile FileName}
-
-
       [] reverse(M) then {Reverse {Mix P2T M}}
       [] repeat(amount:N M) then {Repeat N {Mix P2T M}}
-
-      % Loop... ;)
       [] loop(seconds:D M) then {Loop D {Mix P2T M}}
-
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
-
-      % Echo
       [] echo(delay:Delay decay:Decay M) then {Mix P2T {Echo Delay Decay M}}
-
       [] cut(start:S finish:F M) then {Cut {FloatToInt S*44100.0} {FloatToInt F*44100.0} {Mix P2T M}}
 
       [] Z then {ToListOfSample Z}
