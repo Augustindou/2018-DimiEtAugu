@@ -363,6 +363,7 @@ local
          else {Append {Mix P2T H} {Mix P2T T}}
          end
 
+      [] samples(S) then S
       [] partition(P) then {Mix P2T {P2T P}}
       [] merge(List) then {Merge P2T List}
       [] wave(FileName) then {Project.readFile FileName}
