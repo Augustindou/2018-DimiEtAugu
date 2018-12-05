@@ -315,7 +315,7 @@ local
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   % I=CI
+   % I=CI  
    % fun{Fade Start Finish Music}
    %    fun{FadeLeft Start Music Acc}
    % 	 case Music
