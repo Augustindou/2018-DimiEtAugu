@@ -315,34 +315,34 @@ local
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   
+
    fun{Fade Start Finish Music}
       fun{FadeLeft Start Music2 Acc}
       	case Music2
-      	of H|T then 
+      	of H|T then
             %{Browse 'Longueur de la music'}{Browse {List.length Music}}
       	   if Acc==Start*44100.0 then Music2
-      	   else (Acc/(Start*44100.0))*H|{FadeLeft Start T Acc+1.0} 
+      	   else (Acc/(Start*44100.0))*H|{FadeLeft Start T Acc+1.0}
       	   end
-         [] nil then nil 
+         [] nil then nil
          end
       end
 
       fun{FadeRight Finish Music2 Acc}
-   	   local 
+   	   local
    	      MusicLength = {IntToFloat {List.length Music2}}
    	      LeftList = {Cut 0 {FloatToInt (MusicLength-(Finish*44100.0)-1.0)} Music2}               % {Cut 0.0 11019/44100 Music} -> Tab de pos 0 à 11020(11019)
    	      RightList = {Cut {FloatToInt (MusicLength-(Finish*44100.0))} {FloatToInt MusicLength} Music2}  % {Cut 11020/44100 11025/44100 Music} -> Tab de pos 11019(11020) à 6
             %{Browse 'Longueur du LefttList :'}{Browse {List.length LeftList}}
             %{Browse 'Longueur du RightList :'}{Browse {List.length RightList}}
    	   in
-   	      {Append LeftList {Reverse {FadeLeft Finish {Reverse RightList} Acc}}}
+   	      {Append LeftList {List.reverse {FadeLeft Finish {List.reverse RightList} Acc}}}
    	   end
       end
 
    in
     %{Browse Music}
-      {FadeLeft Start {FadeRight Finish Music 0.0} 0.0}    
+      {FadeLeft Start {FadeRight Finish Music 0.0} 0.0}
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -365,8 +365,8 @@ local
       [] clip(low:L high:H M) then {Clip L H {Mix P2T M}}
       [] echo(delay:Delay decay:Decay M) then {Mix P2T {Echo Delay Decay M}}
       [] cut(start:S finish:F M) then {Cut {FloatToInt S*44100.0} {FloatToInt F*44100.0} {Mix P2T M}}
-      [] fade(start:Start out:Out M) then {Fade Start Out {Mix P2T M}} 
-      [] Z then 
+      [] fade(start:Start out:Out M) then {Fade Start Out {Mix P2T M}}
+      [] Z then
          if (Z.duration > 1000.0/44100.0) then {Fade 500.0/44100.0 500.0/44100.0 {ToSample Z}}
          elseif (Z.duration > 500.0/44100.0) then {Fade 250.0/44100.0 250.0/44100.0 {ToSample Z}}
          else {ToListOfSample Z} % faudrait juste mettre "ToSample"
