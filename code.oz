@@ -4,11 +4,9 @@
 % Augustin d'Oultremont - 22391700
 
 local
-   % See project statement for API details.
    [Project] = {Link ['Project2018.ozf']}
    Time = {Link ['x-oz://boot/Time']}.1.getReferenceTime
    Flag
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%               DEBUT DE LA PARTIE PARTITIONTOTIMEDLIST                 %%%
@@ -326,9 +324,11 @@ local
 %
 % @Post : Permet de prendre une seule partie de la musique et de supprimer
 %         tout le reste. Ici en argument sont les positions dans le tableau.
+%         Nous gerons tout de meme le cas du Start<End.
 %
    fun{Cut Start End L} 
-      if Start > 0 then
+      if Start>End then {Cut End Start L}
+      elseif Start > 0 then
          case L
          of _|T then {Cut Start-1 End-1 T}
          else {Cut Start-1 End-1 L}
@@ -418,7 +418,6 @@ local
          if {List.is H} then {Append {Mix P2T {Chord H}} {Mix P2T T}}
          else {Append {Mix P2T H} {Mix P2T T}}
          end
-
       [] samples(S) then S
       [] partition(P) then {Mix P2T {P2T P}}
       [] merge(List) then {Merge P2T List}
@@ -446,18 +445,9 @@ local
 
    Music = {Project.load 'PiratesDesCaraibes.oz'}
    Start
-
-   % Uncomment next line to insert your tests.
-   % \insert 'tests.oz'
-   % !!! Remove this before submitting.
 in
    Start = {Time}
 
-   % Uncomment next line to run your tests.
-   % {Test Mix PartitionToTimedList}
-
-   % Add variables to this list to avoid "local variable used only once"
-   % warnings.
    {ForAll [NoteToExtended Music] Wait}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -467,10 +457,7 @@ in
    Flag = false                                                           %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   % Calls your code, prints the result and outputs the result to out.wav.
-   % You don't need to modify this.
-   {Browse {Project.run Mix PartitionToTimedList Music 'Test1.wav'}}
+   {Browse {Project.run Mix PartitionToTimedList Music 'PiratesDesCaraibes.wav'}}
 
-   % Shows the total time to run your code.
    {Browse {IntToFloat {Time}-Start} / 1000.0}
 end
