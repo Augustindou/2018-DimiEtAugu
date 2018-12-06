@@ -432,9 +432,10 @@ local
       [] fade(start:Start out:Out M) then {Fade Start Out {Mix P2T M}}
       [] Z then
          if Flag==true then
-            if (Z.duration > 1000.0/44100.0) then {Fade 500.0/44100.0 500.0/44100.0 {ToSample Z}}
+            if (Z.duration > 2000.0/4100.0) then {Fade 1000.0/44100.0 1000.0/44100.0 {ToSample Z}}
+            elseif (Z.duration > 1000.0/44100.0) then {Fade 500.0/44100.0 500.0/44100.0 {ToSample Z}}
             elseif (Z.duration > 500.0/44100.0) then {Fade 250.0/44100.0 250.0/44100.0 {ToSample Z}}
-            else nil
+            else {ToSample Z}
             end
          else {ToSample Z}
          end
@@ -443,7 +444,7 @@ local
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   Music = {Project.load 'Mario.oz'}
+   Music = {Project.load 'PiratesDesCaraibes.oz'}
    Start
 
    % Uncomment next line to insert your tests.
@@ -463,12 +464,12 @@ in
 %%%                              LISSAGE                                  %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    % Veuillez passer le booleen a "true" si vous voulez le lissage        %%%
-   Flag = true                                                            %%%
+   Flag = false                                                           %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    % Calls your code, prints the result and outputs the result to out.wav.
    % You don't need to modify this.
-   {Browse {Project.run Mix PartitionToTimedList Music 'out.wav'}}
+   {Browse {Project.run Mix PartitionToTimedList Music 'Test1.wav'}}
 
    % Shows the total time to run your code.
    {Browse {IntToFloat {Time}-Start} / 1000.0}
