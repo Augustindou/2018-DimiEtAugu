@@ -1,10 +1,13 @@
 local 
 
-    Tune1 = [a3 c d d d e f f f g e e d c d] %x2
-    Tune2 = [a3 c d d d f g g g a a#4 a#4 a g a d]
-    Tune3 = [e f f g a d f e e f d e]
+   
+    Tune1 = [stretch(factor: 0.5 [a3 c]) d d stretch(factor:0.5 [d e]) f f stretch(factor:0.5 [f g]) e e stretch(factor:0.5 [d c]) c d]
+    Tune2 = [stretch(factor: 0.5 [a3 c]) d d stretch(factor:0.5 [d e]) f f stretch(factor:0.5 [f g]) e e stretch(factor:0.5 [d c]) d]
+    Tune3 = [stretch(factor: 0.5 [a3 c]) d d stretch(factor:0.5 [d f g]) g stretch(factor:0.5 [g a]) a#4 a#4 stretch(factor:0.5 [a g]) a d]
+    Tune4 = [d e f f g a d d f e e f d e]
 
-    Partition = {Flatten [Tune1 Tune1 Tune2 Tune3]}
+    Partition = {Flatten [Tune1 Tune2 Tune3 Tune4]}
+
 
 in
     [partition(stretch(factor:0.25 Partition))]
